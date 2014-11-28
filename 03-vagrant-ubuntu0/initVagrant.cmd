@@ -1,0 +1,1 @@
+call vagrant init puphpet/ubuntu1404-x64

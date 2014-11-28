@@ -1,0 +1,16 @@
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.network :forwarded_port, guest: 22, host: 22101, auto_correct: true
+  config.vm.network "private_network", ip: "192.168.28.101"
+  config.vm.provider :virtualbox do |v, override|
+    v.gui = true
+    v.customize ["modifyvm", :id, "--memory", 700]
+    v.customize ["modifyvm", :id, "--cpus", 1]
+  end
+  config.vm.synced_folder "app/", "/app/website"
+  config.vm.provision "shell", inline: "sudo apt-get update"
+  config.vm.provision "shell", inline: "sudo apt-get -y install apache2"
+  config.vm.provision "shell", inline: "sudo /etc/init.d/apache2 restart"
+end

@@ -1,0 +1,76 @@
+{
+    "variables": {
+      "win_iso_url" : "http://download.microsoft.com/download/7/5/E/75EC4E54-5B02-42D6-8879-D8D3A25FBEF7/7601.17514.101119-1850_x64fre_server_eval_en-us-GRMSXEVAL_EN_DVD.iso",
+      "guest_additions_url" : "http://download.virtualbox.org/virtualbox/4.3.18/VBoxGuestAdditions_4.3.18.iso",
+      "guest_additions_checksum" : "e5b425ec4f6a62523855c3cbd3975d17f962f27df093d403eab27c0e7f71464a"
+    },
+
+    "builders": [
+    {
+      "type": "virtualbox-iso",
+      "iso_url": "{{user `win_iso_url`}}",
+      "iso_checksum_type" : "none",
+      "headless": false,
+      "boot_wait": "2m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "2h",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+      "guest_os_type": "Windows2008_64",
+      "guest_additions_url": "{{user `guest_additions_url`}}",
+      "guest_additions_sha256": "{{user `guest_additions_checksum`}}",
+      "disk_size": 61440,
+      "floppy_files": [
+        "./answer_files/2008_r2/Autounattend.xml",
+        "./scripts/microsoft-updates.bat",
+        "./scripts/win-updates.ps1",
+        "./scripts/openssh.ps1",
+        "./scripts/set-dns-suffix.ps1",
+        "./scripts/oracle-cert.cer"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "remote_path": "/tmp/script.bat",
+      "execute_command": "{{.Vars}} cmd /c C:/Windows/Temp/script.bat",
+      "scripts": [
+        "./scripts/vm-guest-tools.bat",
+        "./scripts/vagrant-ssh.bat",
+        "./scripts/compact.bat",
+        "./scripts/puppet.bat"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "rm -rf /tmp/*"
+      ]
+    }
+  ],
+
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "windows_2008_r2_{{.Provider}}.box",
+      "vagrantfile_template": "./scripts/vagrantfile-windows_2008_r2_puppt.template"
+    }
+  ]
+}

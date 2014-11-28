@@ -1,0 +1,28 @@
+
+nodes = [
+  { :hostname => 'windows.ad',         :ip => '192.168.28.13',  :box => 'winauto/2008R2_puppet', :ram => 1024 },
+  { :hostname => 'solars.messaging',   :ip => '192.168.28.14',  :box => 'solarisauto/solaris11', :ram => 1024 },
+  { :hostname => 'ubuntu.app1',        :ip => '192.168.28.201', :box => 'ubuntu/trusty64',       :ram => 1024 },
+  { :hostname => 'ubuntu.app2',        :ip => '192.168.28.202', :box => 'ubuntu/trusty64',       :ram => 1024 },
+]
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  nodes.each do |node|
+    config.vm.define node[:hostname] do |node_config|
+      node_config.vm.box = node[:box]
+      node_config.vm.network "private_network", ip: node[:ip]
+      memory = node[:ram] ? node[:ram] : 256;
+      node_config.vm.provider :virtualbox do |v, override|
+        v.customize [
+          'modifyvm', :id,
+          '--name', node[:hostname],
+          '--memory', memory.to_s
+        ]
+      end 
+    end
+  end
+end
+
+
